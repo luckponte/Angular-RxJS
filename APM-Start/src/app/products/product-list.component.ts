@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Observable } from 'rxjs';
+import { EMPTY, Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { Product } from './product';
 import { ProductService } from './product.service';
 
 @Component({
   templateUrl: './product-list.component.html',
-  styleUrls: ['./product-list.component.css']
+  styleUrls: ['./product-list.component.css'],
 })
 export class ProductListComponent implements OnInit {
   pageTitle = 'Product List';
@@ -16,10 +17,16 @@ export class ProductListComponent implements OnInit {
 
   products$: Observable<Product[]>;
 
-  constructor(private productService: ProductService) { }
+  constructor(private productService: ProductService) {}
 
   ngOnInit(): void {
-    this.products$ = this.productService.getProducts();
+    this.products$ = this.productService.getProducts().pipe(
+      catchError((err) => {
+        this.errorMessage = err;
+        console.error(err);
+        return EMPTY;
+      })
+    );
   }
 
   onAdd(): void {
