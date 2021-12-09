@@ -20,6 +20,7 @@ export class ProductListAltComponent {
       return EMPTY;
     })
   );
+  selectedProduct$ = this.productService.selectedProduct$;
 
   constructor(private productService: ProductService) {}
 
