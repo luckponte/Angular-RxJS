@@ -13,7 +13,7 @@ import { ProductService } from '../product.service';
 export class ProductListAltComponent {
   pageTitle = 'Products';
   private errorMessageSubject = new Subject<string>();
-  triggerErrorAction$ = this.errorMessageSubject.asObservable();
+  errorAction$ = this.errorMessageSubject.asObservable();
 
   products$ = this.productService.productsWithCat$.pipe(
     catchError((err) => {
