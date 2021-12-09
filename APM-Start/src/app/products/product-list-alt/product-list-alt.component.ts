@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { EMPTY, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { Product } from '../product';
 import { ProductService } from '../product.service';
 
 @Component({
