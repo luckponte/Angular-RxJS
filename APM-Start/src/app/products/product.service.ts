@@ -10,7 +10,7 @@ import {
   Subject,
   throwError,
 } from 'rxjs';
-import { catchError, map, scan, tap } from 'rxjs/operators';
+import { catchError, map, scan, shareReplay, tap } from 'rxjs/operators';
 
 import { Product } from './product';
 import { Supplier } from '../suppliers/supplier';
@@ -49,11 +49,12 @@ export class ProductService {
             category: category.find((c) => c.id === product.categoryId).name,
           } as Product)
       )
-    )
+    ),
+    shareReplay(1),
   );
 
   products$ = merge(this.productsWithCat$, this.productInsertedAction$).pipe(
-    scan((acc: Product[], val: Product) => [...acc, val])
+    scan((acc: Product[], val: Product) => [...acc, val]),
   );
 
   selectedProduct$ = combineLatest([
@@ -61,7 +62,8 @@ export class ProductService {
     this.selectAction$,
   ]).pipe(
     map(([products, selected]) => products.find((p) => p.id === selected)),
-    tap((product) => console.log(`Selected: ${product}`))
+    tap((product) => console.log(`Selected: ${product}`)),
+    shareReplay(1),
   );
 
   constructor(
