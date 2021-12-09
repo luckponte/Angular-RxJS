@@ -5,10 +5,12 @@ import {
   BehaviorSubject,
   combineLatest,
   EMPTY,
+  merge,
   Observable,
+  Subject,
   throwError,
 } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, scan, tap } from 'rxjs/operators';
 
 import { Product } from './product';
 import { Supplier } from '../suppliers/supplier';
@@ -22,13 +24,19 @@ export class ProductService {
   private productsUrl = 'api/products';
   private suppliersUrl = this.supplierService.suppliersUrl;
 
-  products$ = this.http.get<Product[]>(this.productsUrl).pipe(
+  private selectedProductSubject = new BehaviorSubject<number>(0);
+  selectAction$ = this.selectedProductSubject.asObservable();
+
+  private productInsertedSubject = new Subject<Product>();
+  productInsertedAction$ = this.productInsertedSubject.asObservable();
+
+  rawProducts$ = this.http.get<Product[]>(this.productsUrl).pipe(
     tap((data) => console.log('Products: ', JSON.stringify(data))),
     catchError(this.handleError)
   );
 
   productsWithCat$ = combineLatest([
-    this.products$,
+    this.rawProducts$,
     this.categoryService.productCategories$,
   ]).pipe(
     map(([products, category]) =>
@@ -44,8 +52,9 @@ export class ProductService {
     )
   );
 
-  private selectedProductSubject = new BehaviorSubject<number>(0);
-  selectAction$ = this.selectedProductSubject.asObservable();
+  products$ = merge(this.productsWithCat$, this.productInsertedAction$).pipe(
+    scan((acc: Product[], val: Product) => [...acc, val])
+  );
 
   selectedProduct$ = combineLatest([
     this.productsWithCat$,
@@ -69,16 +78,21 @@ export class ProductService {
     this.selectedProductSubject.next(selectedId);
   }
 
+  addProduct(newProduct?:Product): void {
+    newProduct = newProduct || this.fakeProduct();
+    this.productInsertedSubject.next(newProduct);
+  }
+
   private fakeProduct(): Product {
     return {
-      id: 42,
+      id: Math.floor( Math.random() * 1000),
       productName: 'Another One',
       productCode: 'TBX-0042',
       description: 'Our new product',
-      price: 8.9,
+      price: +(Math.random() * 100).toFixed(2),
       categoryId: 3,
       // category: 'Toolbox',
-      quantityInStock: 30,
+      quantityInStock: Math.floor(Math.random() * 1000),
     };
   }
 
