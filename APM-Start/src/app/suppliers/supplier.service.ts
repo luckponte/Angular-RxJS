@@ -17,6 +17,7 @@ import { Supplier } from './supplier';
 })
 export class SupplierService {
   suppliersUrl = 'api/suppliers';
+  
   suppliers$ = this.http.get<Supplier[]>(this.suppliersUrl).pipe(
     tap((data) => console.log('Suppliers: ', JSON.stringify(data))),
     shareReplay(1),

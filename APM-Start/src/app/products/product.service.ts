@@ -5,12 +5,23 @@ import {
   BehaviorSubject,
   combineLatest,
   EMPTY,
+  from,
   merge,
   Observable,
   Subject,
   throwError,
 } from 'rxjs';
-import { catchError, map, scan, shareReplay, tap } from 'rxjs/operators';
+import {
+  catchError,
+  filter,
+  map,
+  mergeMap,
+  scan,
+  shareReplay,
+  switchMap,
+  tap,
+  toArray,
+} from 'rxjs/operators';
 
 import { Product } from './product';
 import { Supplier } from '../suppliers/supplier';
@@ -50,11 +61,11 @@ export class ProductService {
           } as Product)
       )
     ),
-    shareReplay(1),
+    shareReplay(1)
   );
 
   products$ = merge(this.productsWithCat$, this.productInsertedAction$).pipe(
-    scan((acc: Product[], val: Product) => [...acc, val]),
+    scan((acc: Product[], val: Product) => [...acc, val])
   );
 
   selectedProduct$ = combineLatest([
@@ -62,18 +73,32 @@ export class ProductService {
     this.selectAction$,
   ]).pipe(
     map(([products, selected]) => products.find((p) => p.id === selected)),
-    tap((product) => console.log(`Selected: ${product}`)),
-    shareReplay(1),
+    tap((product) => console.log(`Selected:`,product)),
+    shareReplay(1)
   );
 
-  selectedProductSuppliers$ = combineLatest([
-    this.selectedProduct$,
-    this.supplierService.suppliers$,
-  ]).pipe(
-    map(([product, suppliers]) => 
-      suppliers.filter(s => product.supplierIds.includes(s.id))
+  // selectedProductSuppliers$ = combineLatest([
+  //   this.selectedProduct$,
+  //   this.supplierService.suppliers$,
+  // ]).pipe(
+  //   map(([product, suppliers]) =>
+  //     suppliers.filter(s => product.supplierIds.includes(s.id))
+  //   )
+  // )
+
+  selectedProductSuppliers$ = this.selectedProduct$.pipe(
+    filter(product => Boolean(product)),
+    switchMap((product) =>
+      from(product.supplierIds).pipe(
+        mergeMap((id) =>
+          this.http.get<Supplier>(
+            `${this.supplierService.suppliersUrl}/${id}`
+          )
+        ),
+        toArray()
+      )
     )
-  )
+  );
 
   constructor(
     private http: HttpClient,
@@ -89,14 +114,14 @@ export class ProductService {
     this.selectedProductSubject.next(selectedId);
   }
 
-  addProduct(newProduct?:Product): void {
+  addProduct(newProduct?: Product): void {
     newProduct = newProduct || this.fakeProduct();
     this.productInsertedSubject.next(newProduct);
   }
 
   private fakeProduct(): Product {
     return {
-      id: Math.floor( Math.random() * 1000),
+      id: Math.floor(Math.random() * 1000),
       productName: 'Another One',
       productCode: 'TBX-0042',
       description: 'Our new product',
