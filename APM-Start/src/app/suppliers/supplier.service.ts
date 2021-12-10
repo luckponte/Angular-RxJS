@@ -1,15 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { throwError, Observable } from 'rxjs';
+import { throwError, Observable, of } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  mergeMap,
+  shareReplay,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
+import { Supplier } from './supplier';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SupplierService {
   suppliersUrl = 'api/suppliers';
+  suppliers$ = this.http.get<Supplier[]>(this.suppliersUrl).pipe(
+    tap((data) => console.log('Suppliers: ', JSON.stringify(data))),
+    shareReplay(1),
+    catchError(this.handleError),
+  );
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   private handleError(err: any): Observable<never> {
     // in a real world app, we may send the server to some remote logging infrastructure
@@ -27,4 +41,7 @@ export class SupplierService {
     return throwError(errorMessage);
   }
 
+  getSuppliers(id: number): Observable<Supplier> {
+    return this.http.get<Supplier>(`${this.suppliersUrl}/${id}`);
+  }
 }

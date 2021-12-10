@@ -7,12 +7,18 @@ import { ProductService } from '../product.service';
 @Component({
   selector: 'pm-product-detail',
   templateUrl: './product-detail.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductDetailComponent {
   pageTitle = 'Product Detail';
   errorMessage = '';
   product$ = this.productService.selectedProduct$.pipe(
+    catchError((err) => {
+      this.errorMessage = err;
+      return EMPTY;
+    })
+  );
+  productSuppliers$ = this.productService.selectedProductSuppliers$.pipe(
     catchError((err) => {
       this.errorMessage = err;
       return EMPTY;
