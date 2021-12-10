@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { EMPTY } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 import { ProductService } from '../product.service';
 
@@ -10,7 +10,6 @@ import { ProductService } from '../product.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductDetailComponent {
-  pageTitle = 'Product Detail';
   errorMessage = '';
   product$ = this.productService.selectedProduct$.pipe(
     catchError((err) => {
@@ -18,6 +17,11 @@ export class ProductDetailComponent {
       return EMPTY;
     })
   );
+
+  pageTitle$ = this.product$.pipe(
+    map(p => p ? `Product Detail for: ${p.productName}`: null)
+  );
+
   productSuppliers$ = this.productService.selectedProductSuppliers$.pipe(
     catchError((err) => {
       this.errorMessage = err;

@@ -77,28 +77,28 @@ export class ProductService {
     shareReplay(1)
   );
 
-  // selectedProductSuppliers$ = combineLatest([
-  //   this.selectedProduct$,
-  //   this.supplierService.suppliers$,
-  // ]).pipe(
-  //   map(([product, suppliers]) =>
-  //     suppliers.filter(s => product.supplierIds.includes(s.id))
-  //   )
-  // )
-
-  selectedProductSuppliers$ = this.selectedProduct$.pipe(
-    filter(product => Boolean(product)),
-    switchMap((product) =>
-      from(product.supplierIds).pipe(
-        mergeMap((id) =>
-          this.http.get<Supplier>(
-            `${this.supplierService.suppliersUrl}/${id}`
-          )
-        ),
-        toArray()
-      )
+  selectedProductSuppliers$ = combineLatest([
+    this.selectedProduct$,
+    this.supplierService.suppliers$,
+  ]).pipe(
+    map(([product, suppliers]) =>
+      suppliers.filter(s => product.supplierIds.includes(s.id))
     )
-  );
+  )
+
+  // selectedProductSuppliers$ = this.selectedProduct$.pipe(
+  //   filter(product => Boolean(product)),
+  //   switchMap((product) =>
+  //     from(product.supplierIds).pipe(
+  //       mergeMap((id) =>
+  //         this.http.get<Supplier>(
+  //           `${this.supplierService.suppliersUrl}/${id}`
+  //         )
+  //       ),
+  //       toArray()
+  //     )
+  //   )
+  // );
 
   constructor(
     private http: HttpClient,
